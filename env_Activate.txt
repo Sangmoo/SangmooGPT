@@ -1,0 +1,15 @@
+- Windows 
+-- Cmd
+env\Scripts\activate.bat
+-- PowerShell 
+env\Scripts\activate.psl
+
+- Mac
+-- bash/zsh
+source env\Scripts\activate
+-- fish
+env\Scripts\activate.fish
+-- csh/tcsh
+env\Scripts\activate.csh
+
+# dependency - pip install -r requirements.txt

@@ -1,0 +1,7 @@
+https://www.langchain.com/
+https://claude.ai/
+https://openai.com/gpt-4
+https://streamlit.io/
+https://www.pinecone.io/
+https://huggingface.co/
+https://fastapi.tiangolo.com/
