@@ -5,3 +5,4 @@ https://streamlit.io/
 https://www.pinecone.io/
 https://huggingface.co/
 https://fastapi.tiangolo.com/
+https://python.langchain.com/docs/
