@@ -159,6 +159,10 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
+
+files/
+.cache/
+
 # requierment
 # pip install -r requirements.txt
 requirements.txt 
