@@ -39,7 +39,7 @@ llm = ChatOpenAI(
 
 
 @st.cache_data(show_spinner="Embedding file...")
-def embed_file(file):
+def embed_file(file):  # st.cache_resource
     file_content = file.read()
     file_path = f"./.cache/files/{file.name}"
     with open(file_path, "wb") as f:
@@ -117,7 +117,7 @@ with st.sidebar:
     )
 
 if file:
-    retriever = embed_file(file)
+    retriever = embed_file(file)  # st.cache_resource
     send_message("I'm ready! Ask away!", "ai", save=False)
     paint_history()
     message = st.chat_input("Ask anything about your file...")
@@ -132,7 +132,7 @@ if file:
             | llm
         )
         with st.chat_message("ai"):
-            response = chain.invoke(message)
+            chain.invoke(message)
 
 
 else:
