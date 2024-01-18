@@ -163,6 +163,7 @@ cython_debug/
 files/
 .cache/
 .streamlit/
+.DS_Store
 
 # requierment
 # pip install -r requirements.txt
