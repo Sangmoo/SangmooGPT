@@ -9,13 +9,14 @@ from langchain.chat_models import ChatOllama
 from langchain.callbacks.base import BaseCallbackHandler
 import streamlit as st
 
-# Private GPT, Use Network-Offline
+# page_title
 st.set_page_config(
     page_title="PrivateGPT",
     page_icon="📃",
 )
 
 
+# 채팅 콜백 핸들러 클래스 - 채팅 중 발생하는 이벤트 처리
 class ChatCallbackHandler(BaseCallbackHandler):
     message = ""
 
@@ -30,7 +31,8 @@ class ChatCallbackHandler(BaseCallbackHandler):
         self.message_box.markdown(self.message)
 
 
-# Use Ollama
+# Ollama 모델을 사용하여 채팅 기능 구현
+# Ollama 서버(로컬, 서버 모두)와 통신이 안된다면, 네트워크 오류 발생
 llm = ChatOllama(
     model="mistral:latest",
     temperature=0.1,
@@ -41,7 +43,7 @@ llm = ChatOllama(
 )
 
 
-# Use Cache Data - Embedding Data
+# 파일의 내용을 임베딩 데이터로 캐시하는 기능
 @st.cache_data(show_spinner="Embedding file...")
 def embed_file(file):
     file_content = file.read()
@@ -63,10 +65,12 @@ def embed_file(file):
     return retriever
 
 
+# 사용자와 AI의 메시지를 저장하는 함수
 def save_message(message, role):
     st.session_state["messages"].append({"message": message, "role": role})
 
 
+# 메시지 전송 및 화면에 표시 함수
 def send_message(message, role, save=True):
     with st.chat_message(role):
         st.markdown(message)
@@ -74,6 +78,7 @@ def send_message(message, role, save=True):
         save_message(message, role)
 
 
+# 이전 대화 내용을 화면에 표시하는 함수
 def paint_history():
     for message in st.session_state["messages"]:
         send_message(
@@ -83,10 +88,12 @@ def paint_history():
         )
 
 
+# 문서의 내용을 형식에 맞게 포맷팅하는 함수
 def format_docs(docs):
     return "\n\n".join(document.page_content for document in docs)
 
 
+# 채팅 프롬프트 템플릿 설정
 prompt = ChatPromptTemplate.from_template(
     """Answer the question using ONLY the following context and not your training data. If you don't know the answer just say you don't know. DON'T make anything up.
     
@@ -95,7 +102,7 @@ prompt = ChatPromptTemplate.from_template(
     """
 )
 
-
+# 웹 애플리케이션 제목 및 설명
 st.title("PrivateGPT")
 
 st.markdown(
@@ -108,12 +115,14 @@ Upload your files on the sidebar.
 """
 )
 
+# 사이드바에 파일 업로드 기능
 with st.sidebar:
     file = st.file_uploader(
         "Upload a .txt .pdf or .docx file",
         type=["pdf", "txt", "docx"],
     )
 
+# 파일이 업로드되면 해당 파일에 대한 정보 추출 및 대화 시작
 if file:
     retriever = embed_file(file)
     send_message("I'm ready! Ask away!", "ai", save=False)
@@ -132,6 +141,6 @@ if file:
         with st.chat_message("ai"):
             chain.invoke(message)
 
-
+# 세션 초기화
 else:
     st.session_state["messages"] = []
