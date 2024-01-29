@@ -9,6 +9,7 @@ from langchain.chat_models import ChatOllama
 from langchain.callbacks.base import BaseCallbackHandler
 import streamlit as st
 
+# Private GPT, Use Network-Offline
 st.set_page_config(
     page_title="PrivateGPT",
     page_icon="📃",
@@ -29,6 +30,7 @@ class ChatCallbackHandler(BaseCallbackHandler):
         self.message_box.markdown(self.message)
 
 
+# Use Ollama
 llm = ChatOllama(
     model="mistral:latest",
     temperature=0.1,
@@ -39,6 +41,7 @@ llm = ChatOllama(
 )
 
 
+# Use Cache Data - Embedding Data
 @st.cache_data(show_spinner="Embedding file...")
 def embed_file(file):
     file_content = file.read()
