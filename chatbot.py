@@ -1,20 +1,45 @@
-from common import client, model
+from common import client, makeup_response
+import math
 
 
 class Chatbot:
 
-    def __init__(self, model):
-        self.context = [{"role": "system", "content": "어시스트"}]
+    def __init__(self, model, system_role, instruction):
+        self.context = [{"role": "system", "content": system_role}]
         self.model = model
+        self.instruction = instruction
+        self.max_token_size = 16 * 1024
+        self.available_token_rate = 0.9
 
     def add_user_message(self, user_message):
         self.context.append({"role": "user", "content": user_message})
 
+    def _send_request(self):
+        try:
+            response = client.chat.completions.create(
+                model=self.model,
+                messages=self.context,
+                temperature=0.5,  # 자유도
+                top_p=1,
+                max_tokens=256,
+                frequency_penalty=0,
+                presence_penalty=0,
+            ).model_dump()
+        except Exception as e:
+            print(f"Exception 오류({type(e)}) 발생:{e}")
+            if "maximum context length" in str(e):
+                self.context.pop()
+                return makeup_response("메시지 조금 짧게 보내줘")
+            else:
+                return makeup_response(
+                    "[초롱 봇에 문제가 발생했습니다. 잠시 뒤 이용해주세요]"
+                )
+
+        return response
+
     def send_request(self):
-        response = client.chat.completions.create(
-            model=self.model, messages=self.context
-        )
-        return response.model_dump()
+        self.context[-1]["content"] += self.instruction
+        return self._send_request()
 
     def add_response(self, response):
         self.context.append(
@@ -27,30 +52,21 @@ class Chatbot:
     def get_response_content(self):
         return self.context[-1]["content"]
 
+    def clean_context(self):
+        for idx in reversed(range(len(self.context))):
+            if self.context[idx]["role"] == "user":
+                self.context[idx]["content"] = (
+                    self.context[idx]["content"].split("instruction:\n")[0].strip()
+                )
+                break
 
-if __name__ == "__main__":
-    # step-3: 테스트 시나리오에 따라 실행 코드 작성 및 예상 출력결과 작성
-    chatbot = Chatbot(model.basic)
-
-    chatbot.add_user_message("스피츠의 고향은 어디인가?")
-
-    # 시나리오1-4: 현재 context를 openai api 입력값으로 설정하여 전송
-    response = chatbot.send_request()
-
-    # 시나리오1-5: 응답 메시지를 context에 추가
-    chatbot.add_response(response)
-
-    # 시나리오1-7: 응답 메시지 출력
-    print(chatbot.get_response_content())
-
-    # 시나리오2-2: 사용자가 채팅창에 질의 입력
-    chatbot.add_user_message("진돗개의 고향은 어디인가?")
-
-    # 다시 요청 보내기
-    response = chatbot.send_request()
-
-    # 응답 메시지를 context에 추가
-    chatbot.add_response(response)
-
-    # 응답 메시지 출력
-    print(chatbot.get_response_content())
+    def handle_token_limit(self, response):
+        # 누적 토큰 수가 임계점을 넘지 않도록 제어한다.
+        try:
+            current_usage_rate = response["usage"]["total_tokens"] / self.max_token_size
+            exceeded_token_rate = current_usage_rate - self.available_token_rate
+            if exceeded_token_rate > 0:
+                remove_size = math.ceil(len(self.context) / 10)
+                self.context = [self.context[0]] + self.context[remove_size + 1 :]
+        except Exception as e:
+            print(f"handle_token_limit exception:{e}")
